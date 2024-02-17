@@ -48,10 +48,10 @@ class ProblemSolutionUser(models.Model):
         primary_key=True)
     sol = models.TextField()
     pid = models.ForeignKey(
-        "Problem", db_column="pid", default=0 ,on_delete=models.CASCADE
+        "Problem", default=0 ,on_delete=models.CASCADE
     )
     uid = models.ForeignKey(
-        "User", db_column="uid", default=0 ,on_delete=models.CASCADE
+        "User", default=0 ,on_delete=models.CASCADE
     )
     rating = models.CharField(max_length=5,default=0.0)
     created_at     = models.DateTimeField(editable=False)
@@ -74,13 +74,13 @@ class ProblemTestCase(models.Model):
     inp = models.TextField()
     out = models.TextField()
     pid = models.ForeignKey(
-        "Problem", db_column="pid", default=0 ,on_delete=models.CASCADE
+        "Problem", default=0 ,on_delete=models.CASCADE
     )
     created_at     = models.DateTimeField(editable=False)
     modified_at    = models.DateTimeField(default=timezone.now())
 
     def __str__(self):
-        return str(self.problem_id)
+        return str(self.id)
     
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -95,14 +95,14 @@ class ProblemSolutionTestCase(models.Model):
     attempted = models.BooleanField(default=False)
     passed = models.BooleanField(default=False)
     sid = models.ForeignKey(
-        "ProblemSolutionUser", db_column="psid", default=0 ,on_delete=models.CASCADE
+        "ProblemSolutionUser", default=0 ,on_delete=models.CASCADE
     )
     created_at     = models.DateTimeField(editable=False)
     modified_at    = models.DateTimeField(default=timezone.now())
 
 
     def __str__(self):
-        return str(self.problem_id)
+        return str(self.id)
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:

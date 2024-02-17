@@ -4,7 +4,7 @@ import subprocess
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import User, Problem
+from .models import User, Problem, ProblemTestCase
 
 def index(request):
     return HttpResponse("hey!")
@@ -41,13 +41,27 @@ def create_problem(request):
     return JsonResponse({'pid': problem.id})
 
 @csrf_exempt
+def create_test_case(request):
+    data = json.loads(request.POST.get('data'))
+    pid = data['pid']
+    inp = data['inp']
+    out = data['out']
+    pblm = Problem.objects.get(id=pid)
+    test = ProblemTestCase(pid=pblm, inp=inp, out=out)
+    test.save()
+    return JsonResponse({'status': 'success'})
+
+
+@csrf_exempt
 def compile_code(request):
+    print("requueueu")
     data = json.loads(request.POST.get('data'))
     code = data['code']
     language = data['language']
     test_cases = data.get('test_cases')
     print(code, language, test_cases)
     filename = 'temp.' + language
+    stdout, stderr = '', ''
     with open(filename, 'w') as file:
         file.write(code)
 
@@ -59,16 +73,21 @@ def compile_code(request):
         try:
             if language == 'py':
                 process = subprocess.Popen(['python', filename], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                stdout, stderr = process.communicate(input_data, timeout=5)
+
             elif language == 'java':
-                process = subprocess.Popen(['java', filename[:-3]], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                process = subprocess.Popen(['javac', filename], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                process.wait()
+                process = subprocess.Popen(['java', 'temp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                stdout, stderr = process.communicate(input_data, timeout=5)
             elif language == 'c':
                 process = subprocess.Popen(['gcc', '-o', 'temp', filename], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 process.wait()
                 process = subprocess.Popen(['./temp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                stdout, stderr = process.communicate(input_data, timeout=5)
             else:
                 return JsonResponse({'error': 'Language not supported'})
 
-            stdout, stderr = process.communicate(input_data, timeout=5)
             if stderr:
                 output[idx] = {'output': stderr.strip(), 'status': 'Compilation Error'}
             else:
@@ -78,5 +97,5 @@ def compile_code(request):
                     output[idx] = {'output': stdout.strip(), 'status': 'Fail'}
         except subprocess.TimeoutExpired:
             output[idx] = {'output': '', 'status': 'Timeout'}
-
+    print(output)
     return JsonResponse(output)

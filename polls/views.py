@@ -1,10 +1,11 @@
 from django.http import HttpResponse
 # Create your views here.
-import subprocess
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import json
-from .models import User, Problem, ProblemTestCase
+
+from .compile import compile_by_lang
+from .models import User, Problem, ProblemTestCase, ProblemSolutionUser
 
 def index(request):
     return HttpResponse("hey!")
@@ -51,51 +52,28 @@ def create_test_case(request):
     test.save()
     return JsonResponse({'status': 'success'})
 
+@csrf_exempt
+def submit_and_run_solution(request):
+    data = json.loads(request.POST.get('data'))
+    uid = data['uid']
+    pid = data['pid']
+    sol = data['sol']
+    pblm = Problem.objects.get(id=pid)
+    user = User.objects.get(id=uid)
+    user_sol = ProblemSolutionUser(uid=user, pid=pblm, sol=sol)
+
+    user_sol.save()
+    tstByPid = ProblemTestCase.objects.filter(pid=pid)
+    return JsonResponse({'status': 'success'})
+
 
 @csrf_exempt
 def compile_code(request):
     print("requueueu")
     data = json.loads(request.POST.get('data'))
     code = data['code']
-    language = data['language']
+    lang = data['lang']
     test_cases = data.get('test_cases')
-    print(code, language, test_cases)
-    filename = 'temp.' + language
-    stdout, stderr = '', ''
-    with open(filename, 'w') as file:
-        file.write(code)
-
-    output = {}
-    for idx, test_case in enumerate(test_cases):
-        input_data = test_case['input']
-        expected_output = test_case['output']
-
-        try:
-            if language == 'py':
-                process = subprocess.Popen(['python', filename], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                stdout, stderr = process.communicate(input_data, timeout=5)
-
-            elif language == 'java':
-                process = subprocess.Popen(['javac', filename], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                process.wait()
-                process = subprocess.Popen(['java', 'temp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                stdout, stderr = process.communicate(input_data, timeout=5)
-            elif language == 'c':
-                process = subprocess.Popen(['gcc', '-o', 'temp', filename], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                process.wait()
-                process = subprocess.Popen(['./temp'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                stdout, stderr = process.communicate(input_data, timeout=5)
-            else:
-                return JsonResponse({'error': 'Language not supported'})
-
-            if stderr:
-                output[idx] = {'output': stderr.strip(), 'status': 'Compilation Error'}
-            else:
-                if stdout.strip() == expected_output.strip():
-                    output[idx] = {'output': stdout.strip(), 'status': 'Pass'}
-                else:
-                    output[idx] = {'output': stdout.strip(), 'status': 'Fail'}
-        except subprocess.TimeoutExpired:
-            output[idx] = {'output': '', 'status': 'Timeout'}
-    print(output)
-    return JsonResponse(output)
+    print(code, lang, test_cases)
+    output = compile_by_lang(lang, code, test_cases)
+    return JsonResponse(output,safe=False)

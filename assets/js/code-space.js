@@ -14,6 +14,7 @@ import {
 } from "./constants/space-items";
 import { RenderIde } from "./components/blocks";
 import CreateProblemForm from "./components/form";
+import { set } from "lodash";
 
 const { Header, Content, Sider } = Layout;
 
@@ -73,6 +74,7 @@ const CodeSpaces = () => {
         message: "Success",
         description: "Problem published successfully",
       });
+      setCurrentState("Problems");
       console.log(res, "res in creating problem");
     } catch (e) {
       console.log(e, "error in creating problem");

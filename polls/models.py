@@ -27,7 +27,7 @@ class Problem(models.Model):
     id = models.AutoField(
         primary_key=True)
     name = models.CharField(max_length=128,unique=True, default="some problem")
-    lang = models.CharField(max_length=8, choices=TYPE_OF_ALLOWED_LANGS)
+    des = models.TextField(default="problem description")
     rating = models.FloatField(max_length=5,default=0.0)
     problem = models.TextField()
     created_at     = models.DateTimeField(editable=False)
@@ -47,16 +47,19 @@ class ProblemSolutionUser(models.Model):
     id = models.AutoField(
         primary_key=True)
     sol = models.TextField()
+    lang = models.CharField(max_length=8, choices=TYPE_OF_ALLOWED_LANGS, default='py')
     pid = models.ForeignKey(
-        "Problem", db_column="pid", default=0 ,on_delete=models.CASCADE
+        "Problem", default=0 ,on_delete=models.CASCADE
     )
     uid = models.ForeignKey(
-        "User", db_column="uid", default=0 ,on_delete=models.CASCADE
+        "User", default=0 ,on_delete=models.CASCADE
     )
     rating = models.CharField(max_length=5,default=0.0)
     created_at     = models.DateTimeField(editable=False)
     modified_at    = models.DateTimeField(default=timezone.now())
 
+    class Meta:
+        unique_together = ('uid', 'pid',)
 
     def __str__(self):
         return str(self.id)
@@ -74,13 +77,13 @@ class ProblemTestCase(models.Model):
     inp = models.TextField()
     out = models.TextField()
     pid = models.ForeignKey(
-        "Problem", db_column="pid", default=0 ,on_delete=models.CASCADE
+        "Problem", default=0 ,on_delete=models.CASCADE
     )
     created_at     = models.DateTimeField(editable=False)
     modified_at    = models.DateTimeField(default=timezone.now())
 
     def __str__(self):
-        return str(self.problem_id)
+        return str(self.id)
     
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
@@ -95,14 +98,17 @@ class ProblemSolutionTestCase(models.Model):
     attempted = models.BooleanField(default=False)
     passed = models.BooleanField(default=False)
     sid = models.ForeignKey(
-        "ProblemSolutionUser", db_column="psid", default=0 ,on_delete=models.CASCADE
+        "ProblemSolutionUser", default=0 ,on_delete=models.CASCADE
+    )
+    tid = models.ForeignKey(
+        "ProblemTestCase", on_delete=models.CASCADE, to_field="id"
     )
     created_at     = models.DateTimeField(editable=False)
     modified_at    = models.DateTimeField(default=timezone.now())
 
 
     def __str__(self):
-        return str(self.problem_id)
+        return str(self.id)
     def save(self, *args, **kwargs):
         ''' On save, update timestamps '''
         if not self.id:
@@ -110,6 +116,25 @@ class ProblemSolutionTestCase(models.Model):
         self.modified_at = timezone.now()
         return super(ProblemSolutionTestCase, self).save(*args, **kwargs)
 
+class ProblemType(models.Model):
+    id = models.AutoField(
+        primary_key=True)
+    type = models.CharField(max_length=128, default="strings")
+    pid = models.ForeignKey(
+        "Problem", default=0 ,on_delete=models.CASCADE
+    )
+    created_at     = models.DateTimeField(editable=False)
+    modified_at    = models.DateTimeField(default=timezone.now())
+
+
+    def __str__(self):
+        return str(self.id)
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created_at = timezone.now()
+        self.modified_at = timezone.now()
+        return super(ProblemType, self).save(*args, **kwargs)
 
 # # tables dependent on each other will come first 
 

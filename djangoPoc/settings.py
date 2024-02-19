@@ -80,10 +80,10 @@ WSGI_APPLICATION = 'djangoPoc.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': "mydb2",
+        'NAME': "postgres",
         'USER': 'postgres',
         'PASSWORD': 'postgrespw',
-        'HOST': 'localhost',
+        'HOST': 'database-2.cbsa6ky6w2y5.eu-north-1.rds.amazonaws.com',
         'PORT': '5432',
     }
 

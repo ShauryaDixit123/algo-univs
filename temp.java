@@ -1,6 +1,7 @@
 import java.io.*;
+
 class temp {
 	public static void main (String[] args) {
-		System.out.println("GferwrweewrG!");
+                 add(33)
 	}
 }

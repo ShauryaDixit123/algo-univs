@@ -1,10 +1,11 @@
 import React from "react";
 
-import { Breadcrumb, Layout, Menu, theme } from "antd";
+import { Breadcrumb, Layout, Menu, theme, Tooltip } from "antd";
 import axios from "axios";
 import { notification } from "antd";
 import { useSearchParams } from "react-router-dom";
-import { Space, Table, Tag, Flex, TextArea, Input, Button, Select } from "antd";
+import { Space, Table, Tag, Flex, Input, Button, Select, Form } from "antd";
+import { MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import {
   sideNavItems,
   navItems,
@@ -12,6 +13,7 @@ import {
   columnItems,
 } from "./constants/space-items";
 import { RenderIde } from "./components/blocks";
+import CreateProblemForm from "./components/form";
 
 const { Header, Content, Sider } = Layout;
 
@@ -55,21 +57,41 @@ const CodeSpaces = () => {
       });
     }
   };
+  const handleCreateProblem = async (values) => {
+    const reqURL = `http://localhost:8000/polls/create_problem`;
+    try {
+      const form = new FormData();
+      const data = {
+        name: values.name,
+        problem: values.des,
+        type: values.type.split(","),
+        test_cases: values.test_cases,
+      };
+      form.append("data", JSON.stringify(data));
+      const res = await axios.post(reqURL, form);
+      notification.success({
+        message: "Success",
+        description: "Problem published successfully",
+      });
+      console.log(res, "res in creating problem");
+    } catch (e) {
+      console.log(e, "error in creating problem");
+    }
+  };
   const [currentState, setCurrentState] = React.useState("Problems");
   const [currentSelectedProblem, setCurrentSelectedProblem] = React.useState();
   const [currentSelectedProblemInfo, setCurrentSelectedProblemInfo] =
     React.useState();
   const [problems, setProblems] = React.useState([]);
   const [attemptedProblems, setAttemptedProblems] = React.useState([]);
+  const { TextArea } = Input;
 
   React.useEffect(() => {
     currentState === "Problems" && fetchAllProblems();
     handleFetchAllUserAttempts();
   }, [currentState]);
   React.useEffect(() => {
-    currentSelectedProblem &&
-      (setCurrentState("IDE"),
-      handleFetchProblemDetails(currentSelectedProblem));
+    currentSelectedProblem && handleFetchProblemDetails(currentSelectedProblem);
   }, [currentSelectedProblem]);
   console.log(
     currentSelectedProblemInfo,
@@ -88,8 +110,7 @@ const CodeSpaces = () => {
           items={navItems}
           style={{ flex: 1, minWidth: 0 }}
           onClick={(info) => {
-            info.key === "2" && setCurrentState("Problems"),
-              info.key === "1" && setCurrentState("Home");
+            setCurrentState(info.key);
           }}
         />
       </Header>
@@ -106,7 +127,12 @@ const CodeSpaces = () => {
                 ...val,
                 key: i,
                 label: (
-                  <div onClick={() => setCurrentSelectedProblem(val.pid_id)}>
+                  <div
+                    onClick={() => (
+                      setCurrentState("IDE"),
+                      setCurrentSelectedProblem(val.pid_id)
+                    )}
+                  >
                     {" "}
                     <span style={{ color: "#CCCCC" }}>{val.name}</span>,
                     <span style={{ color: "#1677FF" }}>{val.des}</span>
@@ -114,6 +140,16 @@ const CodeSpaces = () => {
                 ),
               }))
             )}
+            onClick={(info) => {
+              console.log(info, "infoxczxczxc");
+              if (info.key == "IDE" && !currentSelectedProblem) {
+                return;
+              }
+              if (info.keyPath[1] && info.keyPath[1] == "Your attempts") {
+                return;
+              }
+              setCurrentState(info.key);
+            }}
           />
         </Sider>
         <Layout style={{ padding: "0 24px 24px" }}>
@@ -149,9 +185,11 @@ const CodeSpaces = () => {
                 currentSelectedProblemInfo={currentSelectedProblemInfo}
               />
             ) : currentState === "Home" ? (
-              <></>
+              <>Building......</>
             ) : currentState === "Create Problem" ? (
-              <></>
+              <>
+                <CreateProblemForm onSubmit={handleCreateProblem} />
+              </>
             ) : null}
           </Content>
         </Layout>

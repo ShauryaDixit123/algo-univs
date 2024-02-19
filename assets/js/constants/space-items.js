@@ -6,7 +6,7 @@ import {
 } from "@ant-design/icons";
 import { Tag } from "antd";
 
-export const sideNavItems = (attemptedChildren) => [
+export const sideNavItems = (attemptedChildren, onClick) => [
   {
     key: `Your attempts`,
     icon: React.createElement(UserOutlined),
@@ -22,18 +22,18 @@ export const sideNavItems = (attemptedChildren) => [
   {
     key: `Create Problem`,
     icon: React.createElement(NotificationOutlined),
-    label: `Create Problem`,
+    label: "Create Problem",
   },
 ];
 
 export const navItems = [
   {
-    key: 1,
+    key: `Home`,
     icon: React.createElement(LaptopOutlined),
     label: `Home`,
   },
   {
-    key: 2,
+    key: `Problems`,
     icon: React.createElement(LaptopOutlined),
     label: `Problems`,
   },

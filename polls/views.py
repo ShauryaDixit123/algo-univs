@@ -33,16 +33,18 @@ def create_problem(request):
     rating = 0
     data = json.loads(request.POST.get('data'))
     name = data['name']
-    rating = data['rating']
     problem = data['problem']
     pb_type = data['type']
+    test_cases = data['test_cases']
     pblm = Problem(name=name,rating=rating, problem=problem)
     pblm.save()
     for i in range(len(pb_type)):
         pt =  ProblemType(pid=pblm, type= pb_type[i])
         pt.save()
-
-    return JsonResponse({'pid': problem.id})
+    for i in range(len(test_cases)):
+        tc = ProblemTestCase(pid=pblm, inp=test_cases[i]["inp"], out=test_cases[i]["out"])
+        tc.save()
+    return JsonResponse({'pid': pblm.id})
 
 @csrf_exempt
 def create_test_case(request):
@@ -71,8 +73,10 @@ def compile_code_by_pid(request):
     else:
         user_sol = ProblemSolutionUser(uid=user, pid=pblm, sol=sol)
         user_sol.save()
+        user_sol = ProblemSolutionUser.objects.filter(uid=user, pid=pblm)
     tstByPid = ProblemTestCase.objects.filter(pid=pid)
     result = [value for key, value in compile_by_lang(lang=lang, code=sol, test_cases=list(tstByPid.values())).items()]
+    print(user_sol,"asdsdsa")
     del_test_case_result(user_sol[0].id)
     for i in range(len(list(tstByPid.values()))):
         psed = result[i]["status"] == "Pass"

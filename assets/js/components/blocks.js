@@ -15,6 +15,7 @@ import {
 import { testColumn } from "../constants/space-items";
 import { notification } from "antd";
 import axios from "axios";
+import { handleConvert, handleTabKeyUp } from "../helper";
 
 const UserDetailsModal = (props) => {
   const [visible, setVisible] = useState(props.open);
@@ -49,8 +50,8 @@ export const RenderIde = (props) => {
   const currentSelectedProblemInfo = props.currentSelectedProblemInfo;
   const userD = JSON.parse(localStorage.getItem("user"));
   const [problemRating, setProblemRating] = useState(0);
+  const textAreaRef = React.useRef();
   const handleSubmitCode = async () => {
-    console.log("submitting code");
     const reqURL = `http://localhost:8000/polls/compile_code_by_pid`;
     try {
       const form = new FormData();
@@ -63,12 +64,12 @@ export const RenderIde = (props) => {
       form.append("data", JSON.stringify(data));
       const res = await axios.post(reqURL, form);
       console.log(res.data.result, "resasdasdas");
-      setOpenRating(true);
+      res.data.passed && setOpenRating(true);
       setTestCaseRes(res.data.result);
     } catch (error) {
       notification.error({
         message: "Error",
-        description: "Error in fetching problems",
+        description: "Error in submitting solution",
       });
     }
   };
@@ -149,6 +150,7 @@ export const RenderIde = (props) => {
           <Select
             defaultValue={selectedLang}
             onChange={(val) => setSelectedLang(val)}
+            value={selectedLang}
             style={{ width: 120 }}
             options={[
               { value: "py", label: "Python" },
@@ -165,9 +167,19 @@ export const RenderIde = (props) => {
         </Flex>
         <Flex>
           <TextArea
+            ref={textAreaRef}
             onChange={(e) => setCode(e.target.value)}
             value={code}
-            style={{ minHeight: "440px", marginTop: "1rem" }}
+            style={{
+              minHeight: "440px",
+              marginTop: "1rem",
+              whiteSpace: "pre-wrap",
+            }}
+            rows={10}
+            cols={50}
+            onKeyDown={(e) => {
+              handleTabKeyUp(e, textAreaRef);
+            }}
           />
           <Menu
             mode="inline"

@@ -11,7 +11,7 @@ import { useSearchParams } from "react-router-dom";
 
 export const App = () => {
   const [username, setUsername] = useState(
-    JSON.parse(localStorage.getItem("user")).user
+    JSON.parse(localStorage.getItem("user"))?.user
   );
   const handleCreateNewUser = async (user) => {
     try {

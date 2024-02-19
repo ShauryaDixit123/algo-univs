@@ -4,14 +4,15 @@ import {
   NotificationOutlined,
   UserOutlined,
 } from "@ant-design/icons";
+import { Tag } from "antd";
 
-export const sideNavItems = [
+export const sideNavItems = (attemptedChildren) => [
   {
     key: `Your attempts`,
     icon: React.createElement(UserOutlined),
     label: `Your attempts`,
 
-    children: [],
+    children: attemptedChildren,
   },
   {
     key: `IDE`,
@@ -38,11 +39,70 @@ export const navItems = [
   },
 ];
 
-export const testColumn = (children) => [
+export const testColumn = (testCaseChildren, resultChildren) => [
   {
     key: "Test Cases",
     label: "Test Cases",
     icon: React.createElement(NotificationOutlined),
-    children: children,
+    children: testCaseChildren,
+  },
+  {
+    key: "Result",
+    label: "Result",
+    icon: React.createElement(NotificationOutlined),
+    children: resultChildren,
+  },
+];
+export const columnItems = (onClickAction) => [
+  {
+    title: "Title",
+    dataIndex: "name",
+    key: "name",
+    render: (text, record) => (
+      <span
+        style={{
+          color: "#1677FF",
+          fontWeight: "500",
+          fontSize: "18px",
+          cursor: "pointer",
+        }}
+        onClick={() => {
+          console.log(record, "record");
+          onClickAction(record.id);
+        }}
+      >
+        {text}
+      </span>
+    ),
+  },
+  {
+    title: "Rating",
+    dataIndex: "rating",
+    key: "rating",
+    render: (text) => (
+      <span style={{ color: "#1677FF", fontWeight: "500", fontSize: "14px" }}>
+        {text}
+      </span>
+    ),
+  },
+  {
+    title: "Tags",
+    key: "tags",
+    dataIndex: "tags",
+    render: (_, { type }) => (
+      <>
+        {type.map((tag) => {
+          let color = tag.length > 5 ? "geekblue" : "green";
+          if (tag === "dynamic programming") {
+            color = "volcano";
+          }
+          return (
+            <Tag color={color} key={tag}>
+              {tag.type.toUpperCase()}
+            </Tag>
+          );
+        })}
+      </>
+    ),
   },
 ];

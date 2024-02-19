@@ -13,7 +13,9 @@ urlpatterns = [
     path("problem_list/", views.problems_list, name="problem_list"),
     path("problem/<int:pid>", views.get_problem_by_id, name="problem"),
     path("compile_code_by_pid", views.compile_code_by_pid, name="compile_code_by_pid"),
-    
+    path("user_sol", views.user_solution_history_by_pid, name="user_sol"),
+    path("rate_problem", views.create_rating, name="rate_problem"),
+    path("user_attempts/<int:uid>", views.get_prblms_attempted_by_user, name="problem_attempted_by_user"),
     # api's above , frontEnd below! Here will be using just one html!
     
     path('react-web/', view=TemplateView.as_view(template_name='polls/static_react.html')),

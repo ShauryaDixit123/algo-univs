@@ -58,6 +58,8 @@ class ProblemSolutionUser(models.Model):
     created_at     = models.DateTimeField(editable=False)
     modified_at    = models.DateTimeField(default=timezone.now())
 
+    class Meta:
+        unique_together = ('uid', 'pid',)
 
     def __str__(self):
         return str(self.id)
@@ -97,6 +99,9 @@ class ProblemSolutionTestCase(models.Model):
     passed = models.BooleanField(default=False)
     sid = models.ForeignKey(
         "ProblemSolutionUser", default=0 ,on_delete=models.CASCADE
+    )
+    tid = models.ForeignKey(
+        "ProblemTestCase", on_delete=models.CASCADE, to_field="id"
     )
     created_at     = models.DateTimeField(editable=False)
     modified_at    = models.DateTimeField(default=timezone.now())

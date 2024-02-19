@@ -5,66 +5,18 @@ import axios from "axios";
 import { notification } from "antd";
 import { useSearchParams } from "react-router-dom";
 import { Space, Table, Tag, Flex, TextArea, Input, Button, Select } from "antd";
-import { sideNavItems, navItems, testColumn } from "./constants/space-items";
+import {
+  sideNavItems,
+  navItems,
+  testColumn,
+  columnItems,
+} from "./constants/space-items";
 import { RenderIde } from "./components/blocks";
 
 const { Header, Content, Sider } = Layout;
 
-const columnItems = (onClickAction) => [
-  {
-    title: "Title",
-    dataIndex: "name",
-    key: "name",
-    render: (text, record) => (
-      <span
-        style={{
-          color: "#1677FF",
-          fontWeight: "500",
-          fontSize: "18px",
-          cursor: "pointer",
-        }}
-        onClick={() => {
-          console.log(record, "record");
-          onClickAction(record.id);
-        }}
-      >
-        {text}
-      </span>
-    ),
-  },
-  {
-    title: "Rating",
-    dataIndex: "rating",
-    key: "rating",
-    render: (text) => (
-      <span style={{ color: "#1677FF", fontWeight: "500", fontSize: "14px" }}>
-        {text}
-      </span>
-    ),
-  },
-  {
-    title: "Tags",
-    key: "tags",
-    dataIndex: "tags",
-    render: (_, { type }) => (
-      <>
-        {type.map((tag) => {
-          let color = tag.length > 5 ? "geekblue" : "green";
-          if (tag === "dynamic programming") {
-            color = "volcano";
-          }
-          return (
-            <Tag color={color} key={tag}>
-              {tag.type.toUpperCase()}
-            </Tag>
-          );
-        })}
-      </>
-    ),
-  },
-];
-
 const CodeSpaces = () => {
+  const userD = JSON.parse(localStorage.getItem("user"));
   const fetchAllProblems = async () => {
     const reqURL = "http://localhost:8000/polls/problem_list";
     try {
@@ -90,19 +42,41 @@ const CodeSpaces = () => {
       });
     }
   };
-
+  const handleFetchAllUserAttempts = async () => {
+    const reqURL = `http://localhost:8000/polls/user_attempts/${userD.id}`;
+    try {
+      const res = await axios.get(reqURL);
+      console.log(res.data, "user attempts");
+      setAttemptedProblems(res.data);
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "Error in fetching problems",
+      });
+    }
+  };
   const [currentState, setCurrentState] = React.useState("Problems");
   const [currentSelectedProblem, setCurrentSelectedProblem] = React.useState();
   const [currentSelectedProblemInfo, setCurrentSelectedProblemInfo] =
     React.useState();
   const [problems, setProblems] = React.useState([]);
+  const [attemptedProblems, setAttemptedProblems] = React.useState([]);
+
   React.useEffect(() => {
-    fetchAllProblems();
-  }, []);
+    currentState === "Problems" && fetchAllProblems();
+    handleFetchAllUserAttempts();
+  }, [currentState]);
   React.useEffect(() => {
-    currentSelectedProblem && handleFetchProblemDetails(currentSelectedProblem);
+    currentSelectedProblem &&
+      (setCurrentState("IDE"),
+      handleFetchProblemDetails(currentSelectedProblem));
   }, [currentSelectedProblem]);
-  console.log(currentSelectedProblemInfo, currentSelectedProblem, "problems");
+  console.log(
+    currentSelectedProblemInfo,
+    currentSelectedProblem,
+    currentState,
+    "problemszxczx"
+  );
   return (
     <Layout style={{ height: "100%", width: "100%" }}>
       <Header style={{ display: "flex", alignItems: "center" }}>
@@ -114,8 +88,8 @@ const CodeSpaces = () => {
           items={navItems}
           style={{ flex: 1, minWidth: 0 }}
           onClick={(info) => {
-            console.log("sadasdasds");
-            setCurrentState(info);
+            info.key === "2" && setCurrentState("Problems"),
+              info.key === "1" && setCurrentState("Home");
           }}
         />
       </Header>
@@ -127,14 +101,26 @@ const CodeSpaces = () => {
             defaultSelectedKeys={["1"]}
             defaultOpenKeys={["Your attempts"]}
             style={{ height: "100%", borderRight: 0 }}
-            items={sideNavItems}
+            items={sideNavItems(
+              attemptedProblems?.map((val, i) => ({
+                ...val,
+                key: i,
+                label: (
+                  <div onClick={() => setCurrentSelectedProblem(val.pid_id)}>
+                    {" "}
+                    <span style={{ color: "#CCCCC" }}>{val.name}</span>,
+                    <span style={{ color: "#1677FF" }}>{val.des}</span>
+                  </div>
+                ),
+              }))
+            )}
           />
         </Sider>
         <Layout style={{ padding: "0 24px 24px" }}>
           <Breadcrumb style={{ margin: "16px 0" }}>
             <Breadcrumb.Item>{currentState}</Breadcrumb.Item>
             <Breadcrumb.Item>
-              {currentSelectedProblem || "List"}
+              {currentState == "Problems" ? "List" : currentSelectedProblem}
             </Breadcrumb.Item>
           </Breadcrumb>
           <Content
@@ -162,6 +148,10 @@ const CodeSpaces = () => {
               <RenderIde
                 currentSelectedProblemInfo={currentSelectedProblemInfo}
               />
+            ) : currentState === "Home" ? (
+              <></>
+            ) : currentState === "Create Problem" ? (
+              <></>
             ) : null}
           </Content>
         </Layout>

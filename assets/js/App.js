@@ -10,7 +10,9 @@ import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 
 export const App = () => {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(
+    JSON.parse(localStorage.getItem("user")).user
+  );
   const handleCreateNewUser = async (user) => {
     try {
       const reqURL = "http://localhost:8000/polls/create_user";
@@ -21,16 +23,12 @@ export const App = () => {
       };
       form.append("data", JSON.stringify(data));
       const res = await axios.post(reqURL, form);
-      console.log(res, "234234324234");
-      notification.message({
-        message: "Success",
-        description: "User created successfully!",
-      });
+      console.log(res, "Asdasdsad");
+      await localStorage.setItem(
+        "user",
+        JSON.stringify({ user, id: res.data.id })
+      );
     } catch (error) {
-      // notification.error({
-      //   message: "Error",
-      //   description: "Error in creating user",
-      // });
       console.log(error, "error");
     }
   };
@@ -52,6 +50,7 @@ export const App = () => {
             setUsername("Guest");
           }
         }}
+        open={!username}
         onOk={async (username) => {
           await handleCreateNewUser(username);
           setUsername(username);

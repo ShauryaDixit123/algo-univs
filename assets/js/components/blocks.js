@@ -17,8 +17,9 @@ import { notification } from "antd";
 import axios from "axios";
 
 const UserDetailsModal = (props) => {
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(props.open);
   const [username, setUsername] = useState("");
+
   return (
     <>
       <Modal
@@ -42,8 +43,12 @@ const UserDetailsModal = (props) => {
 export const RenderIde = (props) => {
   const { TextArea } = Input;
   const [selectedLang, setSelectedLang] = useState("py");
+  const [openRating, setOpenRating] = useState(false);
   const [code, setCode] = useState("");
+  const [testCaseRes, setTestCaseRes] = useState([]);
   const currentSelectedProblemInfo = props.currentSelectedProblemInfo;
+  const userD = JSON.parse(localStorage.getItem("user"));
+  const [problemRating, setProblemRating] = useState(0);
   const handleSubmitCode = async () => {
     console.log("submitting code");
     const reqURL = `http://localhost:8000/polls/compile_code_by_pid`;
@@ -51,13 +56,57 @@ export const RenderIde = (props) => {
       const form = new FormData();
       const data = {
         pid: currentSelectedProblemInfo?.id,
-        uid: 1,
+        uid: userD.id,
         sol: code,
         lang: selectedLang,
       };
       form.append("data", JSON.stringify(data));
       const res = await axios.post(reqURL, form);
-      console.log(res.data, "reszxczxcxz");
+      console.log(res.data.result, "resasdasdas");
+      setOpenRating(true);
+      setTestCaseRes(res.data.result);
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "Error in fetching problems",
+      });
+    }
+  };
+  const handleFetchUserHistoryForProblem = async () => {
+    const reqURL = `http://localhost:8000/polls/user_sol`;
+    const form = new FormData();
+    const data = {
+      pid: currentSelectedProblemInfo?.id,
+      uid: userD.id,
+    };
+    form.append("data", JSON.stringify(data));
+    try {
+      const res = await axios.post(reqURL, form);
+      console.log(res, "user history");
+      const data = res.data;
+      setCode(data.sol);
+      setTestCaseRes(data.tst_hstry);
+      setSelectedLang(data.lang);
+    } catch (error) {
+      notification.error({
+        message: "Error",
+        description: "Error in fetching problems",
+      });
+    }
+  };
+  const handleSubmitRating = async () => {
+    try {
+      const reqURL = `http://localhost:8000/polls/rate_problem`;
+      const form = new FormData();
+      const data = {
+        pid: currentSelectedProblemInfo?.id,
+        uid: userD.id,
+        rating: problemRating,
+      };
+      form.append("data", JSON.stringify(data));
+      const res = await axios.post(reqURL, form);
+      console.log(res, "rating");
+      setOpenRating(false);
     } catch (error) {
       notification.error({
         message: "Error",
@@ -66,8 +115,25 @@ export const RenderIde = (props) => {
     }
   };
   console.log(currentSelectedProblemInfo, "currentSelectedProblemInfo");
+  React.useEffect(() => {
+    currentSelectedProblemInfo?.id && handleFetchUserHistoryForProblem();
+  }, [currentSelectedProblemInfo]);
   return (
     <>
+      <Modal
+        onOk={handleSubmitRating}
+        title="Congrats! All cases are solved!"
+        open={openRating}
+        onCancel={() => setOpenRating(false)}
+      >
+        <h1>Rate the problem</h1>
+        <Input
+          onChange={(e) => setProblemRating(e.target.value)}
+          min={0}
+          max={5}
+          type="number"
+        />
+      </Modal>
       <Flex vertical>
         <h1>
           {currentSelectedProblemInfo?.name}
@@ -100,15 +166,26 @@ export const RenderIde = (props) => {
         <Flex>
           <TextArea
             onChange={(e) => setCode(e.target.value)}
+            value={code}
             style={{ minHeight: "440px", marginTop: "1rem" }}
           />
           <Menu
             mode="inline"
             defaultSelectedKeys={["Test Cases"]}
+            selectedKeys={
+              testCaseRes?.length > 0
+                ? ["Result", "Test Cases"]
+                : ["Test Cases"]
+            }
+            openKeys={
+              testCaseRes?.length > 0
+                ? ["Result", "Test Cases"]
+                : ["Test Cases"]
+            }
             defaultOpenKeys={["Test Cases"]}
             style={{ height: "100%", borderRight: 0, flex: "0.4" }}
             items={testColumn(
-              currentSelectedProblemInfo?.test_cases.map((val, i) => ({
+              currentSelectedProblemInfo?.test_cases?.map((val, i) => ({
                 ...val,
                 key: i,
                 label: (
@@ -117,6 +194,28 @@ export const RenderIde = (props) => {
                     Inp : <span style={{ color: "#1677FF" }}>{val.inp}</span>,
                     Out : <span style={{ color: "#1677FF" }}>{val.out}</span>
                   </>
+                ),
+              })),
+              testCaseRes?.map((val, i) => ({
+                ...val,
+                key: i,
+                label: (
+                  <div style={{ maxWidth: "200px" }}>
+                    <div style={{ width: "100%", overflowX: "scroll" }}>
+                      Case {i + 1} :{" "}
+                      <span style={{ color: "#1677FF" }}>
+                        {val.status || val.attempted ? "Run, " : "Didn't Run"}
+                        {val.status || val.passed ? "Passed ✅" : "Failed ❌"}
+                      </span>
+                      {val.inp && (
+                        <>
+                          <span style={{ color: "#1677FF" }}>{val.inp}</span>,
+                          Out :{" "}
+                          <span style={{ color: "#1677FF" }}>{val.output}</span>
+                        </>
+                      )}
+                    </div>{" "}
+                  </div>
                 ),
               }))
             )}

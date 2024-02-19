@@ -6,7 +6,7 @@ import json
 from django.db.models import F, Value, CharField, JSONField
 from django.db.models.functions import Cast
 from .compile import compile_by_lang
-from .models import User, Problem, ProblemTestCase, ProblemSolutionUser, ProblemType
+from .models import User, Problem, ProblemTestCase, ProblemSolutionUser, ProblemType,ProblemSolutionTestCase
 
 def index(request):
     return HttpResponse("hey!")
@@ -58,19 +58,31 @@ def create_test_case(request):
 @csrf_exempt
 def compile_code_by_pid(request):
     data = json.loads(request.POST.get('data'))
+    all_psed = True
     uid = data['uid']
     pid = data['pid']
     sol = data['sol']
     lang = data['lang']
     pblm = Problem.objects.get(id=pid)
     user = User.objects.get(id=uid)
-    user_sol = ProblemSolutionUser(uid=user, pid=pblm, sol=sol)
-
-    user_sol.save()
+    user_sol = ProblemSolutionUser.objects.filter(uid=user, pid=pblm)
+    if len(user_sol) > 0:
+        user_sol.update(sol=sol)
+    else:
+        user_sol = ProblemSolutionUser(uid=user, pid=pblm, sol=sol)
+        user_sol.save()
     tstByPid = ProblemTestCase.objects.filter(pid=pid)
-    print(list(tstByPid),"zxcxzc")
-    output= compile_by_lang(lang=lang, code=sol, test_cases=list(tstByPid.values()))
-    return JsonResponse(output,safe=False)
+    result = [value for key, value in compile_by_lang(lang=lang, code=sol, test_cases=list(tstByPid.values())).items()]
+    del_test_case_result(user_sol[0].id)
+    for i in range(len(list(tstByPid.values()))):
+        psed = result[i]["status"] == "Pass"
+        if not psed:
+            all_psed = False
+        tid = get_test_case_by_id(list(tstByPid.values())[i]["id"])
+        pblm_sol_tst = ProblemSolutionTestCase(attempted=True, passed=psed, sid=user_sol[0], tid=tid[0])
+        pblm_sol_tst.save()
+    test_case_his = ProblemSolutionTestCase.objects.filter(sid=user_sol.values()[0]["id"]).values()
+    return JsonResponse({"result" : list(test_case_his), "passed" : all_psed},safe=False)
 
 @csrf_exempt
 def compile_code_raw(request):
@@ -104,3 +116,50 @@ def get_problem_by_id(request, pid):
 
 def get_test_cases_by_pid(request, pid):
     return JsonResponse(test_cases_by_pid(pid), safe=False)
+
+@csrf_exempt
+def user_solution_history_by_pid(request):
+    data = json.loads(request.POST.get('data'))
+    pid = data['pid']
+    uid = data['uid']
+    pb_sol = ProblemSolutionUser.objects.filter(pid=pid,uid=uid).values()
+    if len(pb_sol) == 0:
+        return JsonResponse({'error': 'No solution found'})
+    pb_sol = pb_sol[0]
+    test_case_his = ProblemSolutionTestCase.objects.filter(sid=pb_sol["id"]).values()
+    pb_sol["tst_hstry"] = list(test_case_his)
+    return JsonResponse(pb_sol, safe=False)
+
+def get_test_case_by_id(tid):
+    return ProblemTestCase.objects.filter(id=int(tid))
+    
+def del_test_case_result(sid):
+    return ProblemSolutionTestCase.objects.filter(sid=sid).delete()
+
+@csrf_exempt
+def create_rating(request):
+    data = json.loads(request.POST.get('data'))
+    rating = float(data['rating'])
+    uid =  data['uid']
+    pid = data['pid']
+    pblmSu = ProblemSolutionUser.objects.get(uid=uid, pid=pid)
+    pblmSu.rating = rating
+    pblm = Problem.objects.get(id=pid)
+    if pblm.rating == 0:
+        pblm.rating = rating
+    else:
+        pblm.rating  = (pblm.rating + rating)/2
+    pblmSu.save()
+    pblm.save()
+    return JsonResponse({'status': 'success'})
+
+def get_prblms_attempted_by_user(request, uid):
+    pb_sol = ProblemSolutionUser.objects.filter(uid=uid).values()
+    for i in pb_sol:
+        print(i,"dsdas")
+        pblm = Problem.objects.get(id=i["pid_id"]) 
+        i["name"] = pblm.name
+        i["rating"] = pblm.rating
+        i["des"] = pblm.des
+
+    return JsonResponse(list(pb_sol), safe=False)

@@ -9,8 +9,9 @@ def compile_by_lang(lang:str,code:str, test_cases:list[dict[str,str]]):
 
     output = {}
     for idx, test_case in enumerate(test_cases):
-        input_data = test_case['input']
-        expected_output = test_case['output']
+        print(idx,test_case,"sadsads")
+        input_data = test_case['inp']
+        expected_output = test_case['out']
 
         try:
             if lang == 'py':

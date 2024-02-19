@@ -27,7 +27,7 @@ class Problem(models.Model):
     id = models.AutoField(
         primary_key=True)
     name = models.CharField(max_length=128,unique=True, default="some problem")
-    lang = models.CharField(max_length=8, choices=TYPE_OF_ALLOWED_LANGS)
+    des = models.TextField(default="problem description")
     rating = models.FloatField(max_length=5,default=0.0)
     problem = models.TextField()
     created_at     = models.DateTimeField(editable=False)
@@ -47,6 +47,7 @@ class ProblemSolutionUser(models.Model):
     id = models.AutoField(
         primary_key=True)
     sol = models.TextField()
+    lang = models.CharField(max_length=8, choices=TYPE_OF_ALLOWED_LANGS, default='py')
     pid = models.ForeignKey(
         "Problem", default=0 ,on_delete=models.CASCADE
     )
@@ -110,6 +111,25 @@ class ProblemSolutionTestCase(models.Model):
         self.modified_at = timezone.now()
         return super(ProblemSolutionTestCase, self).save(*args, **kwargs)
 
+class ProblemType(models.Model):
+    id = models.AutoField(
+        primary_key=True)
+    type = models.CharField(max_length=128, default="strings")
+    pid = models.ForeignKey(
+        "Problem", default=0 ,on_delete=models.CASCADE
+    )
+    created_at     = models.DateTimeField(editable=False)
+    modified_at    = models.DateTimeField(default=timezone.now())
+
+
+    def __str__(self):
+        return str(self.id)
+    def save(self, *args, **kwargs):
+        ''' On save, update timestamps '''
+        if not self.id:
+            self.created_at = timezone.now()
+        self.modified_at = timezone.now()
+        return super(ProblemType, self).save(*args, **kwargs)
 
 # # tables dependent on each other will come first 
 

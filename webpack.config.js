@@ -7,7 +7,6 @@ module.exports = {
     path: path.resolve(__dirname, "./static/js"), // path to our Django static directory
     publicPath: "js/",
   },
-
   module: {
     rules: [
       {

@@ -34,7 +34,8 @@ STATICFILES_DIRS = [
 # Application definition
 
 INSTALLED_APPS = [
-    'polls.apps.PollsConfig',
+    # 'polls.apps.PollsConfig',
+    "djangoPoc.apps.polls",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

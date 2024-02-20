@@ -21,7 +21,7 @@ const { Header, Content, Sider } = Layout;
 const CodeSpaces = () => {
   const userD = JSON.parse(localStorage.getItem("user"));
   const fetchAllProblems = async () => {
-    const reqURL = "http://0.0.0.0:8000/polls/problem_list";
+    const reqURL = "http://16.171.55.5:8000/:8000/polls/problem_list";
     try {
       const res = await axios.get(reqURL);
       setProblems(res.data);
@@ -34,7 +34,7 @@ const CodeSpaces = () => {
   };
 
   const handleFetchProblemDetails = async (id) => {
-    const reqURL = `http://0.0.0.0:8000/polls/problem/${id}`;
+    const reqURL = `http://16.171.55.5:8000/:8000/polls/problem/${id}`;
     try {
       const res = await axios.get(reqURL);
       setCurrentSelectedProblemInfo(res.data);
@@ -46,7 +46,7 @@ const CodeSpaces = () => {
     }
   };
   const handleFetchAllUserAttempts = async () => {
-    const reqURL = `http://0.0.0.0:8000/polls/user_attempts/${userD.id}`;
+    const reqURL = `http://16.171.55.5:8000/:8000/polls/user_attempts/${userD.id}`;
     try {
       const res = await axios.get(reqURL);
       console.log(res.data, "user attempts");
@@ -59,7 +59,7 @@ const CodeSpaces = () => {
     }
   };
   const handleCreateProblem = async (values) => {
-    const reqURL = `http://0.0.0.0:8000/polls/create_problem`;
+    const reqURL = `http://16.171.55.5:8000/:8000/polls/create_problem`;
     try {
       const form = new FormData();
       const data = {

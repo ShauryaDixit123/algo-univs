@@ -15,7 +15,7 @@ export const App = () => {
   );
   const handleCreateNewUser = async (user) => {
     try {
-      const reqURL = "http://0.0.0.0:8000/polls/create_user";
+      const reqURL = "http://16.171.55.5:8000/:8000/polls/create_user";
       console.log(user, "username");
       const form = new FormData();
       const data = {

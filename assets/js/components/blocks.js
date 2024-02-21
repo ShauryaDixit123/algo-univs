@@ -144,7 +144,7 @@ export const RenderIde = (props) => {
         </h1>
 
         <Flex style={{ width: "100%" }} align="center" justify="space-between">
-          <h2>{currentSelectedProblemInfo?.des}</h2>
+          {selectedLang === "py" && <h2>{currentSelectedProblemInfo?.des}</h2>}
         </Flex>
         <Flex gap={10}>
           <Select
@@ -164,6 +164,9 @@ export const RenderIde = (props) => {
           >
             Run
           </Button>
+          <Space>
+            <h2>Please define function name as "main" if using python</h2>
+          </Space>
         </Flex>
         <Flex>
           <TextArea

@@ -163,14 +163,15 @@ export const RenderIde = (props) => {
           >
             Run
           </Button>
-          {selectedLang === "py" && (
-            <h2>
-              {" "}
-              <Space>
-                <h2>Please define function name as "main" if using python</h2>
-              </Space>
-            </h2>
-          )}
+          {selectedLang === "py" ||
+            (selectedLang === "Python" && (
+              <h2>
+                {" "}
+                <Space>
+                  <h2>Please define function name as "main" if using python</h2>
+                </Space>
+              </h2>
+            ))}
         </Flex>
         <Flex>
           <TextArea

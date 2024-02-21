@@ -52,7 +52,7 @@ export const RenderIde = (props) => {
   const [problemRating, setProblemRating] = useState(0);
   const textAreaRef = React.useRef();
   const handleSubmitCode = async () => {
-    const reqURL = `http://localhost:8000/polls/compile_code_by_pid`;
+    const reqURL = `http://16.171.55.5:8000/polls/compile_code_by_pid`;
     try {
       const form = new FormData();
       const data = {
@@ -74,7 +74,7 @@ export const RenderIde = (props) => {
     }
   };
   const handleFetchUserHistoryForProblem = async () => {
-    const reqURL = `http://localhost:8000/polls/user_sol`;
+    const reqURL = `http://16.171.55.5:8000/polls/user_sol`;
     const form = new FormData();
     const data = {
       pid: currentSelectedProblemInfo?.id,
@@ -97,7 +97,7 @@ export const RenderIde = (props) => {
   };
   const handleSubmitRating = async () => {
     try {
-      const reqURL = `http://localhost:8000/polls/rate_problem`;
+      const reqURL = `http://16.171.55.5:8000/polls/rate_problem`;
       const form = new FormData();
       const data = {
         pid: currentSelectedProblemInfo?.id,

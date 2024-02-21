@@ -1,1 +1,2 @@
-print(2+2+2)
+def main(x,y):
+    print(x,y)

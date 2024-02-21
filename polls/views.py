@@ -7,6 +7,7 @@ from django.db.models import F, Value, CharField, JSONField
 from django.db.models.functions import Cast
 from .compile import compile_by_lang
 from .models import User, Problem, ProblemTestCase, ProblemSolutionUser, ProblemType,ProblemSolutionTestCase
+import textwrap
 
 def index(request):
     return HttpResponse("hey!")
@@ -67,6 +68,7 @@ def compile_code_by_pid(request):
     lang = data['lang']
     pblm = Problem.objects.get(id=pid)
     user = User.objects.get(id=uid)
+    sol = textwrap.dedent(sol)
     user_sol = ProblemSolutionUser.objects.filter(uid=user, pid=pblm)
     if len(user_sol) > 0:
         user_sol.update(sol=sol)
@@ -75,9 +77,20 @@ def compile_code_by_pid(request):
         user_sol.save()
         user_sol = ProblemSolutionUser.objects.filter(uid=user, pid=pblm)
     tstByPid = ProblemTestCase.objects.filter(pid=pid)
-    result = [value for key, value in compile_by_lang(lang=lang, code=sol, test_cases=list(tstByPid.values())).items()]
-    print(user_sol,"asdsdsa")
+    result = compile_by_lang(lang=lang, code=sol, test_cases=list(tstByPid.values()))
+    print(result,"asdsads")
     del_test_case_result(user_sol[0].id)
+    if lang == "py":
+        for i in range(len(list(tstByPid.values()))):
+            psed = result[i]["status"] == "Pass"
+            if not psed:
+                all_psed = False
+            tid = get_test_case_by_id(list(tstByPid.values())[i]["id"])
+            pblm_sol_tst = ProblemSolutionTestCase(attempted=True, passed=psed, sid=user_sol[0], tid=tid[0])
+            pblm_sol_tst.save()
+        test_case_his = ProblemSolutionTestCase.objects.filter(sid=user_sol.values()[0]["id"]).values()
+        return JsonResponse({"result" : list(test_case_his), "passed" : all_psed},safe=False)
+    result = [value for key, value in result.items()]
     for i in range(len(list(tstByPid.values()))):
         psed = result[i]["status"] == "Pass"
         if not psed:

@@ -83,13 +83,13 @@ DATABASES = {
         'NAME': "postgres",
         'USER': 'postgres',
         'PASSWORD': 'postgrespw',
-        'HOST': 'database-2.cbsa6ky6w2y5.eu-north-1.rds.amazonaws.com',
+        'HOST': 'localhost',
         'PORT': '5432',
     }
 
 }
 
-
+# database-2.cbsa6ky6w2y5.eu-north-1.rds.amazonaws.com
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 
